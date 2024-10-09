@@ -1,12 +1,28 @@
-/* src/components/Waveform.css */
-#waveform {
-    width: 100%;
-    height: 60px;
-    margin-top: 10px;
+/* Waveform.css */
+canvas {
+    display: block;
+    margin: 0 auto;
+    border: 2px solid #007bff; /* 파란색 테두리로 강조 */
+    background-color: #1c1e22; /* 더 어두운 배경색 */
+    box-shadow: 0px 0px 15px rgba(0, 123, 255, 0.5); /* 파형의 색상을 반영한 글로우 효과 */
 }
 
-.dot {
-    fill: blue; /* 점의 색상 */
-    transition: r 1s; /* 반경 변화에 애니메이션 추가 */
-  }
-  
+#container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #121417;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}

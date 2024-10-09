@@ -1,3 +1,4 @@
+// App.js
 import React, { useState, useEffect } from 'react';
 import './styles/App.css';
 import StarContainer from './components/StarContainer';
@@ -8,38 +9,59 @@ import useSpeechRecognition from './components/useSpeechRecognition';
 
 function App() {
   const [messages, setMessages] = useState([]);
-  const { isListening, transcript, interimTranscript, startListening, stopListening } = useSpeechRecognition();
+  const { isListening, interimTranscript, finalTranscript, startListening, stopListening } = useSpeechRecognition();
   const [audioContext, setAudioContext] = useState(null);
   const [analyser, setAnalyser] = useState(null);
+  const [micError, setMicError] = useState(null); // 마이크 오류 상태
 
   useEffect(() => {
-    if (transcript) {
-      addMessage('user', transcript);
+    if (finalTranscript) {
+      addMessage('user', finalTranscript);
     }
-  }, [transcript]);
+  }, [finalTranscript]);
 
   useEffect(() => {
-    // Create AudioContext and AnalyserNode when the component mounts
     if (!audioContext) {
-      const context = new (window.AudioContext || window.webkitAudioContext)();
-      const analyserNode = context.createAnalyser();
-      analyserNode.fftSize = 256; // 설정할 fftSize 값, 이 값은 필요에 따라 변경
-      setAudioContext(context);
-      setAnalyser(analyserNode);
+      try {
+        const context = new (window.AudioContext || window.webkitAudioContext)();
+        const analyserNode = context.createAnalyser();
+        analyserNode.fftSize = 512; // FFT 사이즈를 설정하여 주파수 해상도 변경
+
+        navigator.mediaDevices.getUserMedia({ audio: true })
+          .then((stream) => {
+            console.log("Microphone stream active");
+            const source = context.createMediaStreamSource(stream);
+            source.connect(analyserNode);
+            setAudioContext(context);
+            setAnalyser(analyserNode);
+          })
+          .catch((error) => {
+            console.error('Error accessing microphone:', error);
+            setMicError('마이크에 접근할 수 없습니다. 마이크 권한을 확인하세요.');
+          });
+      } catch (error) {
+        console.error("Error initializing AudioContext:", error);
+        setMicError('AudioContext를 초기화하는 동안 오류가 발생했습니다.');
+      }
     }
-  }, []);
+  }, [audioContext]);
+
+  // 마이크 오류 발생 시 안내 메시지 표시
+  useEffect(() => {
+    if (micError) {
+      alert(micError);
+    }
+  }, [micError]);
 
   const handleRecord = () => {
-  if (isListening) {
-    console.log("Stopping listening...");
-    stopListening();
-  } else {
-    console.log("Starting listening...");
-    startListening();
-  }
-};
-
-  
+    if (isListening) {
+      console.log("Stopping listening...");
+      stopListening();
+    } else {
+      console.log("Starting listening...");
+      startListening();
+    }
+  };
 
   const addMessage = (sender, text) => {
     setMessages(prevMessages => [...prevMessages, { sender, text }]);
@@ -60,7 +82,7 @@ function App() {
           currentTranscript={isListening ? interimTranscript : ''} 
         />
         {audioContext && analyser && (
-          <Waveform audioContext={audioContext} analyser={analyser} isActive={isListening} />
+          <Waveform analyser={analyser} isActive={isListening} />
         )}
       </div>
     </div>

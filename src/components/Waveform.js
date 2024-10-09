@@ -1,48 +1,59 @@
+// Waveform.js
 import React, { useEffect, useRef } from 'react';
-import './Waveform.css';
 
-const Waveform = ({ audioContext, analyser }) => {
-  const waveformRef = useRef(null);
+const Waveform = ({ analyser, isActive }) => {
+  const canvasRef = useRef(null);
 
   useEffect(() => {
-    if (!audioContext || !analyser) return;
+    const canvas = canvasRef.current;
+    const canvasCtx = canvas.getContext('2d');
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
 
-    const draw = () => {
-      const bufferLength = analyser.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-      analyser.getByteFrequencyData(dataArray);
+    const drawWaveform = () => {
+      analyser.getByteTimeDomainData(dataArray);
+      canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const waveform = waveformRef.current;
-      waveform.innerHTML = ''; // 기존 점 삭제
+      canvasCtx.lineWidth = 2;
+      canvasCtx.strokeStyle = 'rgb(0, 123, 255)';
 
-      const dotCount = 31;
-      const centerIndex = Math.floor(dotCount / 2);
+      canvasCtx.beginPath();
+      const sliceWidth = canvas.width / bufferLength;
+      let x = 0;
 
-      for (let i = 0; i < dotCount; i++) {
-        const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        const x = (i / (dotCount - 1)) * 100;
-        const dataIndex = Math.floor(bufferLength / 2) + (i - centerIndex) * 2;
-        const r = (dataArray[dataIndex] / 256) * 4 + 1;
+      for (let i = 0; i < bufferLength; i++) {
+        const v = dataArray[i] / 128.0;
+        const y = (v * canvas.height) / 2;
 
-        dot.setAttribute("cx", x);
-        dot.setAttribute("cy", 15); // y 좌표 설정
-        dot.setAttribute("r", r);
-        dot.classList.add("dot");
+        if (i === 0) {
+          canvasCtx.moveTo(x, y);
+        } else {
+          canvasCtx.lineTo(x, y);
+        }
 
-        waveform.appendChild(dot);
+        x += sliceWidth;
       }
 
-      requestAnimationFrame(draw);
+      canvasCtx.lineTo(canvas.width, canvas.height / 2);
+      canvasCtx.stroke();
     };
 
-    draw();
-  }, [audioContext, analyser]);
+    let animationId;
+    const renderFrame = () => {
+      if (isActive) {
+        drawWaveform();
+      }
+      animationId = requestAnimationFrame(renderFrame);
+    };
 
-  return (
-    <svg id="waveform" viewBox="0 0 100 30" ref={waveformRef}>
-      {/* 오디오 시각화 점들이 추가될 부분 */}
-    </svg>
-  );
+    renderFrame();
+
+    return () => {
+      cancelAnimationFrame(animationId);
+    };
+  }, [analyser, isActive]);
+
+  return <canvas ref={canvasRef} width="500" height="100" />;
 };
 
 export default Waveform;

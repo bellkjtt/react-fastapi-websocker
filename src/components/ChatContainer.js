@@ -1,4 +1,3 @@
-// ChatContainer.js
 import React, { useState, useRef, useEffect } from 'react';
 import './ChatContainer.css';
 import cameraIcon from '../images/camera_icon.png';
@@ -34,15 +33,15 @@ const ChatContainer = ({ messages, onSendMessage, currentTranscript }) => {
 
   return (
     <div id="container">
-       <div id="chatContainer" ref={chatContainerRef}>
-      {messages.map((msg, index) => (
-        <div key={index} className={`chatMessage ${msg.sender}Message`}>
-          {msg.text}
-        </div>
-      ))}
-      {currentTranscript && (
-        <div className="chatMessage userMessage interim">{currentTranscript}</div>
-      )}
+      <div id="chatContainer" ref={chatContainerRef}>
+        {messages.map((msg, index) => (
+          <div key={index} className={`chatMessage ${msg.sender}Message`}>
+            {msg.text}
+          </div>
+        ))}
+        {currentTranscript && (
+          <div className="chatMessage userMessage interim">{currentTranscript}</div>  // 실시간 텍스트 표시
+        )}
       </div>
       <div id="inputContainer">
         <input
