@@ -16,9 +16,9 @@ function App() {
   const [volume, setVolume] = useState(0);
 
   const audioRef = useRef(null);
-  const VOLUME_THRESHOLD = 35;
-  const BASE_CIRCLE_SIZE = 75; // 기본 원 크기
-  const MAX_CIRCLE_GROWTH = 150; // 최대 크기 증가량
+  const VOLUME_THRESHOLD = 25;
+  const BASE_CIRCLE_SIZE = 60; // 기본 원 크기
+  const MAX_CIRCLE_GROWTH = 120; // 최대 크기 증가량
 
   useEffect(() => {
     if (transcript) {
@@ -144,7 +144,7 @@ function App() {
                   height: `${circleSize}px`,
                   borderRadius: '50%',
                   backgroundColor: 'black',
-                  transition: volume > VOLUME_THRESHOLD ? 'none' : 'all 0.2s ease-in-out',
+                  transition: volume > VOLUME_THRESHOLD ? 'none' : 'all 0.1s ease-in-out',
                 }}
               />
             </div>

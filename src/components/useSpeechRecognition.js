@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 const useSpeechRecognition = () => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
-  const [recognition, setRecognition] = useState(null);
+  const recognitionRef = useRef(null);
+  const restartTimeoutRef = useRef(null);
 
   useEffect(() => {
     if ('webkitSpeechRecognition' in window) {
@@ -25,42 +26,92 @@ const useSpeechRecognition = () => {
           }
         }
       
-        setTranscript(finalTranscript); // 최종 텍스트는 여기에 저장
-        setInterimTranscript(currentInterimTranscript); // interim 텍스트는 실시간으로 갱신
+        setTranscript(finalTranscript);
+        setInterimTranscript(currentInterimTranscript);
       };
-      
 
       recognitionInstance.onerror = (event) => {
         console.error('Speech recognition error', event.error);
-        setIsListening(false);
+        
+        if (event.error === 'no-speech') {
+          // no-speech 에러 발생 시 재시작
+          restartRecognition();
+        }
       };
 
       recognitionInstance.onend = () => {
-        setIsListening(false);
+        // 아직 listening 상태라면 자동으로 재시작
+        if (isListening) {
+          restartRecognition();
+        } else {
+          setIsListening(false);
+        }
       };
 
-      setRecognition(recognitionInstance);
+      recognitionRef.current = recognitionInstance;
     } else {
       console.error('Speech recognition not supported');
     }
-  }, []);
+
+    // cleanup
+    return () => {
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
+      }
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, [isListening]);
+
+  const restartRecognition = useCallback(() => {
+    if (recognitionRef.current && isListening) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        console.error('Error stopping recognition:', e);
+      }
+
+      // 약간의 지연 후 재시작
+      restartTimeoutRef.current = setTimeout(() => {
+        try {
+          recognitionRef.current.start();
+        } catch (e) {
+          console.error('Error restarting recognition:', e);
+          setIsListening(false);
+        }
+      }, 200);
+    }
+  }, [isListening]);
 
   const startListening = useCallback(() => {
-    if (recognition) {
-      recognition.start();
-      setIsListening(true);
-      setTranscript('');
-      setInterimTranscript('');
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+        setTranscript('');
+        setInterimTranscript('');
+      } catch (e) {
+        console.error('Error starting recognition:', e);
+        setIsListening(false);
+      }
     }
-  }, [recognition]);
+  }, []);
 
   const stopListening = useCallback(() => {
-    if (recognition) {
-      recognition.stop();
-      setIsListening(false);
-      setInterimTranscript('');
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+        setIsListening(false);
+        setInterimTranscript('');
+      } catch (e) {
+        console.error('Error stopping recognition:', e);
+      }
     }
-  }, [recognition]);
+    if (restartTimeoutRef.current) {
+      clearTimeout(restartTimeoutRef.current);
+    }
+  }, []);
 
   return { isListening, transcript, interimTranscript, startListening, stopListening };
 };
