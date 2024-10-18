@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect} from 'react';
 import './styles/App.css';
 import Header from './components/Header';
 import ChatContainer from './components/ChatContainer';
-import Waveform from './components/Waveform';
 import useSpeechRecognition from './components/useSpeechRecognition';
 import backgroundImage from './images/Background.png';
 
@@ -15,8 +14,7 @@ function App() {
   const [analyser, setAnalyser] = useState(null);
   const [volume, setVolume] = useState(0);
 
-  const audioRef = useRef(null);
-  const VOLUME_THRESHOLD = 35;
+  const VOLUME_THRESHOLD = 30;
   const BASE_CIRCLE_SIZE = 75; // 기본 원 크기
   const MAX_CIRCLE_GROWTH = 150; // 최대 크기 증가량
 
