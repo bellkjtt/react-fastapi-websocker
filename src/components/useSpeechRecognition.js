@@ -31,7 +31,7 @@ const useSpeechRecognition = () => {
       };
 
       recognitionInstance.onerror = (event) => {
-        console.error('Speech recognition error', event.error);
+        // console.error('Speech recognition error', event.error);
         
         if (event.error === 'no-speech') {
           // no-speech 에러 발생 시 재시작
@@ -91,6 +91,9 @@ const useSpeechRecognition = () => {
         setIsListening(true);
         setTranscript('');
         setInterimTranscript('');
+
+
+        
       } catch (e) {
         console.error('Error starting recognition:', e);
         setIsListening(false);

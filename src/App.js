@@ -17,7 +17,7 @@ function App() {
 
   const audioRef = useRef(null);
   const VOLUME_THRESHOLD = 25;
-  const BASE_CIRCLE_SIZE = 60; // 기본 원 크기
+  const BASE_CIRCLE_SIZE = 80; // 기본 원 크기
   const MAX_CIRCLE_GROWTH = 120; // 최대 크기 증가량
 
   useEffect(() => {
@@ -27,52 +27,60 @@ function App() {
   }, [transcript]);
 
   useEffect(() => {
-    let audioContext, analyser, microphone, javascriptNode;
-
+    let audioContextInstance, analyserInstance, microphone, javascriptNode;
+  
+    const setupAudioContext = () => {
+      if (!audioContextInstance || audioContext.state === 'closed') {
+        audioContextInstance = new (window.AudioContext || window.webkitAudioContext)();
+        setAudioContext(audioContextInstance);
+        analyserInstance = audioContextInstance.createAnalyser();
+        setAnalyser(analyserInstance);
+  
+        navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+          microphone = audioContextInstance.createMediaStreamSource(stream);
+          javascriptNode = audioContextInstance.createScriptProcessor(2048, 1, 1);
+  
+          analyserInstance.fftSize = 256;
+          microphone.connect(analyserInstance);
+          analyserInstance.connect(javascriptNode);
+          javascriptNode.connect(audioContextInstance.destination);
+  
+          javascriptNode.onaudioprocess = () => {
+            const dataArray = new Uint8Array(analyserInstance.frequencyBinCount);
+            analyserInstance.getByteFrequencyData(dataArray);
+  
+            const volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
+            setVolume(volume);
+  
+            const normalizedVolume = Math.min(volume, 100);
+            const growthFactor = (normalizedVolume / 100) * MAX_CIRCLE_GROWTH;
+            const newSize = BASE_CIRCLE_SIZE + growthFactor;
+  
+            setCircleSize(newSize);
+          };
+        });
+      }
+    };
+  
     if (isListening) {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      setAudioContext(audioContext);
-      analyser = audioContext.createAnalyser();
-      setAnalyser(analyser);
-
-      navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-        microphone = audioContext.createMediaStreamSource(stream);
-        javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
-
-        analyser.fftSize = 256;
-        microphone.connect(analyser);
-        analyser.connect(javascriptNode);
-        javascriptNode.connect(audioContext.destination);
-
-        javascriptNode.onaudioprocess = () => {
-          const dataArray = new Uint8Array(analyser.frequencyBinCount);
-          analyser.getByteFrequencyData(dataArray);
-
-          const volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
-          setVolume(volume);
-          
-          // 볼륨에 따른 크기 변화를 제한
-          const normalizedVolume = Math.min(volume, 100); // 볼륨 최대치를 100으로 제한
-          const growthFactor = (normalizedVolume / 100) * MAX_CIRCLE_GROWTH; // 크기 증가량을 계산
-          const newSize = BASE_CIRCLE_SIZE + growthFactor; // 새로운 크기 계산
-          
-          setCircleSize(newSize);
-        };
-      });
+      setupAudioContext();
     }
-
+  
     return () => {
-      if (audioContext) {
+      if (audioContext && audioContext.state !== 'closed') {
         audioContext.close();
       }
     };
   }, [isListening]);
+  
+  
 
   const handleRecord = () => {
     if (isListening) {
       stopListening();
     } else {
       startListening();
+      
     }
     setShowSpeakingUI(true);
   };
