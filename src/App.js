@@ -84,12 +84,13 @@ function App() {
 
   return (
     <div style={{ 
-      width: '100%',
+      width: '95%',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
       minHeight: '100vh',
-      padding : '10px'
+      // padding : '0px',
+      minWidth: '600px'
     }}>
       <div id="container">
         <Header onRecord={handleRecord} isRecording={isListening} />
