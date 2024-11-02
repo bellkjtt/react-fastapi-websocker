@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import './ChatContainer.css';
+import '../styles/App.css';
 import cameraIcon from '../images/camera_icon.png';
 
 const ChatContainer = ({ messages, onSendMessage, currentTranscript }) => {
