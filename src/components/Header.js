@@ -1,5 +1,5 @@
 import React from 'react';
-import geminiLogo from '../images/gemini_logo_color.jpg';
+import geminiLogo from '../images/liferary_logo.png';
 
 function Header({ onRecord, isRecording }) {
   return (

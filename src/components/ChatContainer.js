@@ -51,10 +51,10 @@ const ChatContainer = ({ messages, onSendMessage, currentTranscript }) => {
           onChange={(e) => setInputText(e.target.value)}
           placeholder="메시지를 입력하세요..."
         />
-        <label htmlFor="imageInput" id="imageLabel">
+        {/* <label htmlFor="imageInput" id="imageLabel">
           <img src={cameraIcon} alt="카메라 아이콘" className="camera-icon" />
           이미지 선택
-        </label>
+        </label> */}
         <input
           type="file"
           id="imageInput"

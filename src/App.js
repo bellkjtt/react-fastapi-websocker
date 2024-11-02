@@ -73,7 +73,7 @@ function App() {
 
   return (
     <div>
-      <StarContainer />
+      {/* <StarContainer /> */}
       <div id="container">
         <Header onRecord={handleRecord} isRecording={isListening} />
         <ChatContainer 
