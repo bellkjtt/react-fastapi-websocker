@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const useSpeechRecognition = () => {
+const useSpeechRecognition = (options = {}) => {
+  const { onMessageReceived = () => {} } = options;
   const [isListening, setIsListening] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState('');
   const [finalTranscript, setFinalTranscript] = useState('');
@@ -85,21 +86,24 @@ const useSpeechRecognition = () => {
 
   const sendToBackend = async (transcript) => {
     try {
-      const response = await fetch('YOUR_BACKEND_API_URL', {
+      const response = await fetch('http://127.0.0.1:8000/process_speech', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ transcript }),
+        body: JSON.stringify({ text: transcript }),
       });
+      
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
+      
       const data = await response.json();
-      console.log('Response from backend:', data);
-
+      // 백엔드 응답을 콜백으로 전달
+      onMessageReceived(data);
+      
       // middleTranscript 초기화
-      setmiddleTranscript(''); // 백엔드로 전송 후 초기화
+      setmiddleTranscript('');
 
       // 데이터 전송 후 다시 음성 인식 활성화
       if (recognition && !isListening) {

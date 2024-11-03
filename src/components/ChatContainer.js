@@ -1,71 +1,74 @@
-import React, { useState, useRef, useEffect } from 'react';
-import '../styles/App.css';
-import cameraIcon from '../images/camera_icon.png';
+import { useState, useEffect } from 'react';
+import useSpeechRecognition from './useSpeechRecognition';
+import ChatContainer from './ChatContainer';
 
-const ChatContainer = ({ messages, onSendMessage, currentTranscript }) => {
-  const [inputText, setInputText] = useState('');
-  const [selectedImage, setSelectedImage] = useState(null);
-  const fileInputRef = useRef(null);
-  const chatContainerRef = useRef(null);
+const Chat = () => {
+  const [messages, setMessages] = useState([]);
+  const { 
+    isListening, 
+    interimTranscript, 
+    finalTranscript, 
+    startListening, 
+    stopListening 
+  } = useSpeechRecognition({
+    onMessageReceived: (response) => {
+      // 봇 메시지 추가
+      setMessages(prev => [...prev, {
+        sender: 'bot',
+        text: response.message // 백엔드 응답 형식에 맞게 조정
+      }]);
+    }
+  });
 
+  // 음성 인식 텍스트가 finalTranscript로 변경될 때 유저 메시지 추가
   useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    if (finalTranscript) {
+      setMessages(prev => [...prev, {
+        sender: 'user',
+        text: finalTranscript
+      }]);
     }
-  }, [messages, currentTranscript]);
+  }, [finalTranscript]);
 
-  const handleSend = () => {
-    if (inputText.trim() || selectedImage) {
-      onSendMessage(inputText, selectedImage);
-      setInputText('');
-      setSelectedImage(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedImage(e.target.files[0]);
+  const handleSendMessage = (text, image) => {
+    // 텍스트 입력 처리
+    if (text) {
+      setMessages(prev => [...prev, {
+        sender: 'user',
+        text: text
+      }]);
+      
+      // 백엔드로 전송
+      fetch('http://127.0.0.1:8000/process_speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        setMessages(prev => [...prev, {
+          sender: 'bot',
+          text: data.message // 백엔드 응답 형식에 맞게 조정
+        }]);
+      })
+      .catch(error => console.error('Error:', error));
     }
   };
 
   return (
-    <div id="container">
-      <div id="chatContainer" ref={chatContainerRef}>
-        {messages.map((msg, index) => (
-          <div key={index} className={`chatMessage ${msg.sender}Message`}>
-            {msg.text}
-          </div>
-        ))}
-        {currentTranscript && (
-          <div className="chatMessage userMessage interim">{currentTranscript}</div>  // 실시간 텍스트 표시
-        )}
-      </div>
-      <div id="inputContainer">
-        <input
-          type="text"
-          id="textInput"
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          placeholder="메시지를 입력하세요..."
-        />
-        {/* <label htmlFor="imageInput" id="imageLabel">
-          <img src={cameraIcon} alt="카메라 아이콘" className="camera-icon" />
-          이미지 선택
-        </label> */}
-        <input
-          type="file"
-          id="imageInput"
-          accept="image/*"
-          onChange={handleImageChange}
-          ref={fileInputRef}
-        />
-        <button id="sendButton" onClick={handleSend}>전송</button>
-      </div>
+    <div>
+      <ChatContainer
+        messages={messages}
+        onSendMessage={handleSendMessage}
+        currentTranscript={interimTranscript}
+      />
+      <button onClick={isListening ? stopListening : startListening}>
+        {isListening ? '음성 인식 중지' : '음성 인식 시작'}
+      </button>
     </div>
   );
 };
 
-export default ChatContainer;
+export default Chat;
