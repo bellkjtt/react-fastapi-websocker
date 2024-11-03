@@ -176,11 +176,32 @@ const useSpeechRecognition = (addMessage) => {
       // 응답을 채팅창에 추가
       // if (data.response) {
       addMessage('bot', data.response);
+      await speakResponse(data.response);
       // }
       console.timeEnd("tts2");
     } catch (error) {
       console.error('Error sending transcript to backend:', error);
       addMessage('bot', '죄송합니다. 오류가 발생했습니다.');
+    }
+  };
+
+  const speakResponse = async (text) => {
+    try {
+      const response = await fetch('http://127.0.0.1:3389/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input: text }),
+      });
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      audio.play();
+      audio.onended = () => URL.revokeObjectURL(audioUrl);
+
+    } catch (error) {
+      console.error('TTS Error:', error);
     }
   };
 
@@ -275,12 +296,35 @@ function App() {
       console.log('Response from backend:', data);
 
       addMessage('bot', data.response);
+      await speakResponse(data.response);
       console.timeEnd("tts");
     } catch (error) {
       console.error('Error:', error);
       addMessage('bot', '죄송합니다. 오류가 발생했습니다.');
     }
   };
+
+  const speakResponse = async (text) => {
+    try {
+      const response = await fetch('http://127.0.0.1:3389/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input: text }),
+      });
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      audio.play();
+      audio.onended = () => URL.revokeObjectURL(audioUrl);
+
+    } catch (error) {
+      console.error('TTS Error:', error);
+    }
+  };
+
+
 
   const handleRecord = async () => {
     if (audioContext && audioContext.state === 'suspended') {
