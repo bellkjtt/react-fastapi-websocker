@@ -1,86 +1,94 @@
 // App.js
 import { useState, useEffect, useCallback, useRef } from 'react';
 import './styles/App.css';
-import geminiLogo from './images/liferary_logo.png';
+import geminiLogo from './images/life2.png';
 
-function Header({ onRecord, isRecording }) {
+function Header() {
   return (
-    <div id="header">
-      <img src={geminiLogo} alt="Gemini Logo" className="logo" />
-      <button id="recordButton" onClick={onRecord}>
-        {isRecording ? "말하기 중지" : "말하기 시작"}
-      </button>
-    </div>
-  );
+    <header className="header">
+      <img src={geminiLogo} 
+      alt="Gemini Logo"
+       className="header-logo"
+       />
+    </header>
+  )
 }
 
 // getCookie 함수 추가
 function getCookie(name) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === (name + '=')) {
-              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-              break;
-          }
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
       }
+    }
   }
   return cookieValue;
 }
 
-// ChatContainer 컴포넌트
-const ChatContainer = ({ messages, onSendMessage, currentTranscript }) => {
-  const [inputText, setInputText] = useState('');
-  const chatContainerRef = useRef(null);
+function ChatContainer({ messages, onSendMessage, currentTranscript, onRecord, isRecording }) {
+  const [inputText, setInputText] = useState("")
+  const chatContainerRef = useRef(null)
 
-  // 새 메시지가 추가될 때마다 스크롤을 맨 아래로
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
     }
-  }, [messages, currentTranscript]);
+  }, [messages, currentTranscript])
 
   const handleSend = () => {
     if (inputText.trim()) {
-      onSendMessage(inputText);
-      setInputText('');
+      onSendMessage(inputText)
+      setInputText("")
     }
-  };
+  }
 
   return (
-    <div id="container">
-      <div id="chatContainer" ref={chatContainerRef}>
+    <div className="chat-container">
+      <div className="chat-header">
+        <img
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%EC%A0%9C%EB%AA%A9%EC%9D%84-%EC%9E%85%EB%A0%A5%ED%95%B4%EC%A3%BC%EC%84%B8%EC%9A%94_-001%20(7)%201-pN2wZ75jO2Y0Q5lVt3MO8CIegq2y6p.png"
+          alt="Liferary Logo"
+          className="chat-header-logo"
+        />
+        <button id="recordButton" onClick={onRecord} className="chat-button">
+          {isRecording ? "말하기 중지" : "말하기 시작"}
+        </button>
+      </div>
+      <div className="chat-messages" ref={chatContainerRef}>
         {messages.map((msg, index) => (
-          <div key={index} className={`chatMessage ${msg.sender}Message`}>
+          <div key={index} className={`chat-message ${msg.sender === "user" ? "user-message" : "bot-message"}`}>
             {msg.text}
           </div>
         ))}
-        {currentTranscript && (
-          <div className="chatMessage userMessage interim">
-            {currentTranscript}
-          </div>
-        )}
+        {currentTranscript && <div className="chat-message user-message">{currentTranscript}</div>}
       </div>
-      <div id="inputContainer">
+      <div className="input-container">
         <input
+	id="textInput"
           type="text"
-          id="textInput"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           onKeyPress={(e) => {
-            if (e.key === 'Enter') {
-              handleSend();
+            if (e.key === "Enter") {
+              handleSend()
             }
           }}
           placeholder="메시지를 입력하세요..."
+          className="input-field"
         />
-        <button id="sendButton" onClick={handleSend}>전송</button>
+        <button id="sendButton" onClick={handleSend} className="send-button">
+          전송
+        </button>
       </div>
     </div>
-  );
-};
+  )
+}
+
 // Header, getCookie, ChatContainer 컴포넌트는 그대로 유지...
 
 const useSpeechRecognition = (addMessage) => {
@@ -108,7 +116,7 @@ const useSpeechRecognition = (addMessage) => {
   const speakResponse = useCallback(async (text) => {
     try {
       stopCurrentAudio(); // 기존 오디오 중지
-      
+
       const response = await fetch('http://127.0.0.1:3389/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -118,9 +126,9 @@ const useSpeechRecognition = (addMessage) => {
       const audioBlob = await response.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
-      
+
       currentAudioRef.current = audio;
-      
+
       audio.play();
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
@@ -134,6 +142,7 @@ const useSpeechRecognition = (addMessage) => {
 
   // 백엔드 통신 함수
   const sendToBackend = useCallback(async (transcript) => {
+    stopCurrentAudio();
     try {
       console.time("tts2");
       const response = await fetch('http://127.0.0.1:8000/process_speech/', {
@@ -148,10 +157,10 @@ const useSpeechRecognition = (addMessage) => {
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-      
+
       const data = await response.json();
       console.log('Response from backend:', data);
-      
+
       if (data.response) {
         await speakResponse(data.response);
         addMessage('bot', data.response);
@@ -190,9 +199,9 @@ const useSpeechRecognition = (addMessage) => {
             currentInterimTranscript += event.results[i][0].transcript;
           }
         }
-        
+
         setInterimTranscript(currentInterimTranscript);
-        
+
         if (currentFinalTranscript) {
           setFinalTranscript(currentFinalTranscript);
           setMiddleTranscript(prev => prev + currentFinalTranscript);
@@ -271,10 +280,14 @@ const useSpeechRecognition = (addMessage) => {
 function App() {
   const [messages, setMessages] = useState([]);
   const [audioContext, setAudioContext] = useState(null);
+  // const videoRef = useCameraStream(); // 카메라 스트림 참조
+  const [cameraError, setCameraError] = useState(null)
+  const videoRef = useRef(null)
 
   const addMessage = useCallback((sender, text) => {
     setMessages(prevMessages => [...prevMessages, { sender, text }]);
   }, []);
+
 
   const {
     isListening,
@@ -284,6 +297,31 @@ function App() {
     stopListening,
     sendToBackend
   } = useSpeechRecognition(addMessage);
+
+  useEffect(() => {
+    const initializeCamera = async () => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices()
+        const videoDevices = devices.filter(device => device.kind === 'videoinput')
+        const obsCamera = videoDevices.find(device => device.label.includes('OBS Virtual Camera'))
+
+        if (obsCamera) {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { deviceId: obsCamera.deviceId }
+          })
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream
+          }
+        } else {
+          console.error("OBS 가상 카메라가 감지되지 않았습니다.")
+        }
+      } catch (err) {
+        console.error("카메라 초기화 중 오류 발생:", err)
+      }
+    }
+
+    initializeCamera()
+  }, [])
 
   useEffect(() => {
     const resetCount = async () => {
@@ -334,20 +372,28 @@ function App() {
   }, [finalTranscript, addMessage]);
 
   return (
-    <div style={{
-      width: '95%',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '95%',
-      flexDirection: 'column'
-    }}>
-      <Header onRecord={handleRecord} isRecording={isListening} />
-      <ChatContainer
-        messages={messages}
-        onSendMessage={handleSendMessage}
-        currentTranscript={interimTranscript}
-      />
+    <div className="main-container">
+      <Header />
+      <main className="main-content">
+        <div className="chat-wrapper">
+          <div className="camera-section">
+            {cameraError ? (
+              <div className="camera-error">{cameraError}</div>
+            ) : (
+              <video ref={videoRef} autoPlay playsInline className="camera-video" />
+            )}
+          </div>
+          <div className="chat-section">
+            <ChatContainer 
+              messages={messages} 
+              onSendMessage={handleSendMessage} 
+              currentTranscript={interimTranscript}
+              onRecord={handleRecord}
+              isRecording={isListening}
+            />
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
