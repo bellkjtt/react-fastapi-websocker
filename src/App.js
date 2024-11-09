@@ -81,14 +81,87 @@ const ChatContainer = ({ messages, onSendMessage, currentTranscript }) => {
     </div>
   );
 };
+// Header, getCookie, ChatContainer 컴포넌트는 그대로 유지...
 
 const useSpeechRecognition = (addMessage) => {
   const [isListening, setIsListening] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState('');
   const [finalTranscript, setFinalTranscript] = useState('');
-  const [middleTranscript, setMiddleTranscript] = useState(''); // 이름 통일
+  const [middleTranscript, setMiddleTranscript] = useState('');
   const [recognition, setRecognition] = useState(null);
   const [silenceTimer, setSilenceTimer] = useState(null);
+  const currentAudioRef = useRef(null);
+
+  // 오디오 중지 함수
+  const stopCurrentAudio = useCallback(() => {
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      if (currentAudioRef.current.src) {
+        URL.revokeObjectURL(currentAudioRef.current.src);
+      }
+      currentAudioRef.current = null;
+    }
+  }, []);
+
+  // TTS 함수
+  const speakResponse = useCallback(async (text) => {
+    try {
+      stopCurrentAudio(); // 기존 오디오 중지
+      
+      const response = await fetch('http://127.0.0.1:3389/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input: text }),
+      });
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      currentAudioRef.current = audio;
+      
+      audio.play();
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        currentAudioRef.current = null;
+      };
+    } catch (error) {
+      console.error('TTS Error:', error);
+      currentAudioRef.current = null;
+    }
+  }, [stopCurrentAudio]);
+
+  // 백엔드 통신 함수
+  const sendToBackend = useCallback(async (transcript) => {
+    try {
+      console.time("tts2");
+      const response = await fetch('http://127.0.0.1:8000/process_speech/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ text: transcript }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      
+      const data = await response.json();
+      console.log('Response from backend:', data);
+      
+      if (data.response) {
+        await speakResponse(data.response);
+        addMessage('bot', data.response);
+      }
+      console.timeEnd("tts2");
+    } catch (error) {
+      console.error('Error sending transcript to backend:', error);
+      addMessage('bot', '죄송합니다. 오류가 발생했습니다.');
+    }
+  }, [speakResponse, addMessage]);
 
   useEffect(() => {
     if ('webkitSpeechRecognition' in window) {
@@ -97,9 +170,18 @@ const useSpeechRecognition = (addMessage) => {
       recognitionInstance.interimResults = true;
       recognitionInstance.lang = 'ko-KR';
 
+      recognitionInstance.onstart = () => {
+        console.log('Speech recognition started');
+        stopCurrentAudio();
+      };
+
       recognitionInstance.onresult = (event) => {
         let currentInterimTranscript = '';
         let currentFinalTranscript = '';
+
+        if (event.results.length > 0) {
+          stopCurrentAudio();
+        }
 
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
@@ -115,20 +197,16 @@ const useSpeechRecognition = (addMessage) => {
           setFinalTranscript(currentFinalTranscript);
           setMiddleTranscript(prev => prev + currentFinalTranscript);
 
-          // 이전 타이머 초기화
           if (silenceTimer) {
             clearTimeout(silenceTimer);
           }
 
-          // 새로운 타이머 설정
           const newTimer = setTimeout(() => {
-            const fullTranscript = currentFinalTranscript; // 현재까지 누적된 전체 텍스트
-            if (fullTranscript.trim()) {
-              // addMessage('user', fullTranscript); // 사용자 메시지 추가
-              sendToBackend(fullTranscript); // 백엔드로 전송
+            if (currentFinalTranscript.trim()) {
+              sendToBackend(currentFinalTranscript);
             }
-            setMiddleTranscript(''); // 전송 후 초기화
-          }, 750); // 1.5초로 조정
+            setMiddleTranscript('');
+          }, 750);
 
           setSilenceTimer(newTimer);
         }
@@ -151,69 +229,18 @@ const useSpeechRecognition = (addMessage) => {
 
       setRecognition(recognitionInstance);
     }
-  }, []); // addMessage를 의존성 배열에 추가
-
-  const sendToBackend = async (transcript) => {
-    try {
-      console.time("tts2");
-      const response = await fetch('http://127.0.0.1:8000/process_speech', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken')
-        },
-        credentials: 'include',
-        body: JSON.stringify({ text: transcript }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      
-      const data = await response.json();
-      console.log('Response from backend:', data);
-
-      // 응답을 채팅창에 추가
-      // if (data.response) {
-      addMessage('bot', data.response);
-      await speakResponse(data.response);
-      // }
-      console.timeEnd("tts2");
-    } catch (error) {
-      console.error('Error sending transcript to backend:', error);
-      addMessage('bot', '죄송합니다. 오류가 발생했습니다.');
-    }
-  };
-
-  const speakResponse = async (text) => {
-    try {
-      const response = await fetch('http://127.0.0.1:3389/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input: text }),
-      });
-
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      
-      audio.play();
-      audio.onended = () => URL.revokeObjectURL(audioUrl);
-
-    } catch (error) {
-      console.error('TTS Error:', error);
-    }
-  };
+  }, [isListening, sendToBackend]);
 
   const startListening = useCallback(() => {
     if (recognition) {
+      stopCurrentAudio(); // recognition 시작 전 현재 재생 중인 오디오 중지
       recognition.start();
       setIsListening(true);
       setInterimTranscript('');
       setFinalTranscript('');
-      setMiddleTranscript(''); // 시작할 때 초기화 추가
+      setMiddleTranscript('');
     }
-  }, [recognition]);
+  }, [recognition, stopCurrentAudio]);
 
   const stopListening = useCallback(() => {
     if (recognition) {
@@ -222,109 +249,62 @@ const useSpeechRecognition = (addMessage) => {
       if (silenceTimer) {
         clearTimeout(silenceTimer);
       }
-      // 마지막으로 누적된 텍스트가 있다면 전송
       const finalText = middleTranscript.trim();
       if (finalText) {
         addMessage('user', finalText);
         sendToBackend(finalText);
       }
     }
-  }, [recognition, silenceTimer, middleTranscript, addMessage]);
+  }, [recognition, silenceTimer, middleTranscript, addMessage, sendToBackend]);
 
-  return { 
-    isListening, 
-    interimTranscript, 
-    finalTranscript, 
-    startListening, 
-    stopListening 
+  return {
+    isListening,
+    interimTranscript,
+    finalTranscript,
+    startListening,
+    stopListening,
+    sendToBackend,  // 외부에서 사용할 수 있도록 export
+    stopCurrentAudio // 외부에서 사용할 수 있도록 export
   };
 };
 
 function App() {
   const [messages, setMessages] = useState([]);
-  const { isListening, interimTranscript, finalTranscript, startListening, stopListening } = useSpeechRecognition(
-    (sender, text) => addMessage(sender, text)
-  );
   const [audioContext, setAudioContext] = useState(null);
-  const [analyser, setAnalyser] = useState(null);
-  const [micError, setMicError] = useState(null);
-
-  useEffect(() => {
-    const resetCount = async () => {
-        try {
-            const response = await fetch('http://127.0.0.1:8000/reset_count', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ session_id: 'default_session' }) // 세션 ID 전달
-            });
-            if (!response.ok) {
-                throw new Error(`Error: ${response.status}`);
-            }
-        } catch (error) {
-            console.error('Failed to reset count:', error);
-        }
-    };
-
-    resetCount();  // 페이지 로드 시 카운트 초기화
-}, []); // 빈 배열을 사용하여 페이지 로드 시에만 호출
-
 
   const addMessage = useCallback((sender, text) => {
     setMessages(prevMessages => [...prevMessages, { sender, text }]);
   }, []);
 
-  const sendToBackend = async (transcript) => {
-    try {
-      console.time("tts");
-      const response = await fetch('http://127.0.0.1:8000/process_speech', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken')
-        },
-        credentials: 'include',
-        body: JSON.stringify({ text: transcript }),
-      });
+  const {
+    isListening,
+    interimTranscript,
+    finalTranscript,
+    startListening,
+    stopListening,
+    sendToBackend
+  } = useSpeechRecognition(addMessage);
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+  useEffect(() => {
+    const resetCount = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/reset_count', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ session_id: 'default_session' })
+        });
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+      } catch (error) {
+        console.error('Failed to reset count:', error);
       }
+    };
 
-      const data = await response.json();
-      console.log('Response from backend:', data);
-
-      addMessage('bot', data.response);
-      await speakResponse(data.response);
-      console.timeEnd("tts");
-    } catch (error) {
-      console.error('Error:', error);
-      addMessage('bot', '죄송합니다. 오류가 발생했습니다.');
-    }
-  };
-
-  const speakResponse = async (text) => {
-    try {
-      const response = await fetch('http://127.0.0.1:3389/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input: text }),
-      });
-
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      
-      audio.play();
-      audio.onended = () => URL.revokeObjectURL(audioUrl);
-
-    } catch (error) {
-      console.error('TTS Error:', error);
-    }
-  };
-
-
+    resetCount();
+  }, []);
 
   const handleRecord = async () => {
     if (audioContext && audioContext.state === 'suspended') {
@@ -363,7 +343,11 @@ function App() {
       flexDirection: 'column'
     }}>
       <Header onRecord={handleRecord} isRecording={isListening} />
-      <ChatContainer messages={messages} onSendMessage={handleSendMessage} currentTranscript={interimTranscript} />
+      <ChatContainer
+        messages={messages}
+        onSendMessage={handleSendMessage}
+        currentTranscript={interimTranscript}
+      />
     </div>
   );
 }
