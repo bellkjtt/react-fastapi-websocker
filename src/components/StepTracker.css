@@ -1,0 +1,91 @@
+.main-container {
+    position: relative;
+    display: flex;
+}
+
+/* step-tracker를 main-container의 왼쪽에 고정 */
+.main-container .step-tracker {
+    position: absolute;
+    left: 8%;
+    top: 201px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 35px;
+}
+
+.main-container .step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+.main-container .circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(170, 162, 149, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    border: 1px solid rgba(170, 162, 149, 1);
+}
+
+/* 내부 원 */
+.main-container .inner-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #fff;
+}
+
+/* 완료된 원 */
+.main-container .completed {
+    background-color: #8B4513;
+    border-color: #8B4513;
+    color: #fff;
+}
+
+/* 활성화된 원의 애니메이션 효과 */
+.main-container .active::before {
+    content: "";
+    position: absolute;
+    width: 110%; /* 크기를 원보다 살짝 크게 설정 */
+    height: 110%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FFA500, #FFD700);
+    animation: rotate 2s linear infinite;
+    z-index: -1; /* 원 뒤쪽에 배치 */
+    top: -5%; /* 원의 중앙에 정렬되도록 위치 조정 */
+    left: -5%;
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 아래쪽 연결 선 */
+.main-container .circle::after {
+    content: "";
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 35px;
+    background-color: inherit; /* 부모 색상 적용 */
+    z-index: 0;
+}
+
+.main-container .step:last-child .circle::after {
+    display: none;
+}
+
+.main-container .label {
+    font-size: 1em;
+    color: #333;
+}

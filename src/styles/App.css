@@ -1,48 +1,27 @@
-body {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    min-height: 100vh;
-    margin: 0;
-    background-color: #f0f0f0;
-    color: #333;
-    overflow-x: hidden;
-    position: relative;
-    gap: 10%;
-}
+
 /* 새로운 main-container를 flex 컨테이너로 설정하여 OBS 화면과 채팅 컨테이너를 나란히 배치 */
-.main-container {
+/* .main-container {
     display: flex;
     align-items: flex-start;
     width: 85vw;
     height: 90vh;
-}
+} */
 
  /* OBS 아바타 화면 스타일 */
- .obs-screen {
+ /* .obs-screen {
     width: 30%;
-    /* 화면의 30% 차지 */
     height: 85vh;
-    /* 높이는 80% */
     position: relative;
-    /* 상대 위치 설정 */
     border-radius: 15px;
-    /* 모서리를 둥글게 */
-    overflow: hidden;
-    /* 내용 넘치면 잘림 */
+    overflow: hidden; 
     margin-left: auto;
-}
+} */
 
-video {
+/* video {
     width: 100%;
-    /* 비디오 너비를 100%로 설정 */
     height: 100%;
-    /* 비디오 높이를 100%로 설정 */
     object-fit: cover;
-    /* 비디오를 박스에 맞게 채움 */
-}
+} */
 
 #container {
     width: 100%;
@@ -69,7 +48,7 @@ video {
 }
 
 #recordButton {
-    font-size: 1em;
+    font-size: 1.2em;
     padding: 8px 16px;
     border: none;
     border-radius: 20px;
@@ -100,7 +79,7 @@ video {
 }
 
 .chatMessage {
-    margin-bottom: 10px;
+    margin-bottom: 20px;
     padding: 8px 12px;
     border-radius: 18px;
     max-width: 70%;
@@ -119,121 +98,36 @@ video {
     align-self: flex-start;
 }
 
-.logo {
-    width: 150px;
-    height: auto;
-}
 
-#waveform {
-    width: 100%;
-    height: 60px;
-    margin-top: 10px;
-}
-
-.dot {
-    fill: #1a73e8;
-    transition: all 0.1s ease;
-}
-
-.star-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    overflow: hidden;
-    z-index: 0;
-}
-
-.star {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, #4285f4, #34a853, #fbbc05, #ea4335);
-    clip-path: polygon(
-        50% 0%, 
-        61% 35%, 
-        98% 35%, 
-        68% 57%, 
-        79% 91%, 
-        50% 70%, 
-        21% 91%, 
-        32% 57%, 
-        2% 35%, 
-        39% 35%
-    );
-    animation: twinkle 3s infinite;
-}
-
-@keyframes twinkle {
-    0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
-    50% { opacity: 0.5; transform: scale(0.8) rotate(180deg); }
-}
-
-#inputContainer {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    margin-top: 10px;
-}
 
 #textInput {
     flex-grow: 1;
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 1em;
+    font-size: 1.2em;
 }
 
 #sendButton {
-    padding: 8px 16px;
+    padding: 7px 20px;
     background-color: #8B4513;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s;
+    font-size: 1.2em;
 }
 
 #sendButton:hover {
     background-color: #5D3311;
 }
 
-#imageInput {
-    display: none;
-}
-
-#imageLabel {
-    display: inline-flex;
-    align-items: center;
-    padding: 8px 16px;
-    background-color: #1a73e8;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    text-align: center;
-    transition: background-color 0.3s;
-}
-
-#imageLabel:hover {
-    background-color: #1558d6;
-}
-
-.camera-icon {
-    width: 20px;
-    height: 20px;
-    vertical-align: middle;
-    margin-right: 5px;
-}
-
 
 /* Component.css */
 :root {
-    --primary-color: #8B4513;
-    --secondary-color: #f5f1ec;
+    --primary-color: #DFD9CE;
+    --secondary-color: #F4F1EA;
     --hover-color: #724023;
     --chat-bg-color: #f9f9f9;
     --user-message-bg: #e3f2fd;
@@ -245,11 +139,11 @@ video {
     height: 131px;
     align-items: center;
     background-color: var(--secondary-color);
-    padding: 0 16px;
+    padding: 0 22px;
   }
   
   .header-logo {
-    height: 80px;
+    height: 95px;
     width: auto;
   }
   
@@ -267,7 +161,7 @@ video {
   }
   
   .chat-header-logo {
-    height: 40px;
+    height: 100px;
     width: auto;
   }
   
@@ -290,17 +184,22 @@ video {
     padding: 16px;
     margin-bottom: 16px;
     border-radius: 8px;
+    
+    word-wrap: break-word;
   }
   
   .chat-message {
-    max-width: 70%;
+    max-width: 100%;
     padding: 12px;
+    margin-bottom: 10px; /* 위 아래 간격을 더 넓게 */
     border-radius: 18px;
   }
   
   .user-message {
     align-self: flex-end;
     background-color: var(--user-message-bg);
+    color: #000;
+    margin-right: 10px; /* 오른쪽으로 살짝 여백 추가 */
   }
   
   .bot-message {
@@ -333,26 +232,27 @@ video {
     display: flex;
     min-height: 100vh;
     flex-direction: column;
-    background-color: var(--secondary-color);
+    background-color: var(--primary-color);
   }
   
   .main-content {
     display: flex;
-    height: calc(100vh - 131px);
-    width: 85vw;
+    height: calc(91vh - 131px);
+    width: 100vw;
     justify-content: center;
-    padding: 16px;
+    padding: 36px 0px 0px;
     margin: 0 auto;
   }
   
   .chat-wrapper {
     display: flex;
     width: 100%;
-    max-width: 1200px;
+    max-width: 65%;
     overflow: hidden;
     border-radius: 30px;
     background-color: white;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    margin-left: 5%;
   }
   
   .camera-section {

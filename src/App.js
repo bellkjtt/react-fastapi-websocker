@@ -1,15 +1,17 @@
 // App.js
 import { useState, useEffect, useCallback, useRef } from 'react';
 import './styles/App.css';
-import geminiLogo from './images/life2.png';
+import biglifelogo from './images/life2.png';
+import smalllifelogo from './images/liferary_logo.png';
+import StepTracker from './components/StepTracker';
 
 function Header() {
   return (
     <header className="header">
-      <img src={geminiLogo} 
-      alt="Gemini Logo"
-       className="header-logo"
-       />
+      <img src={biglifelogo}
+        alt="Gemini Logo"
+        className="header-logo"
+      />
     </header>
   )
 }
@@ -51,8 +53,8 @@ function ChatContainer({ messages, onSendMessage, currentTranscript, onRecord, i
     <div className="chat-container">
       <div className="chat-header">
         <img
-          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%EC%A0%9C%EB%AA%A9%EC%9D%84-%EC%9E%85%EB%A0%A5%ED%95%B4%EC%A3%BC%EC%84%B8%EC%9A%94_-001%20(7)%201-pN2wZ75jO2Y0Q5lVt3MO8CIegq2y6p.png"
-          alt="Liferary Logo"
+          img src={smalllifelogo}
+          alt="Liferary Logo2"
           className="chat-header-logo"
         />
         <button id="recordButton" onClick={onRecord} className="chat-button">
@@ -69,7 +71,7 @@ function ChatContainer({ messages, onSendMessage, currentTranscript, onRecord, i
       </div>
       <div className="input-container">
         <input
-	id="textInput"
+          id="textInput"
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
@@ -374,7 +376,9 @@ function App() {
   return (
     <div className="main-container">
       <Header />
+      
       <main className="main-content">
+      <StepTracker />
         <div className="chat-wrapper">
           <div className="camera-section">
             {cameraError ? (
@@ -384,9 +388,9 @@ function App() {
             )}
           </div>
           <div className="chat-section">
-            <ChatContainer 
-              messages={messages} 
-              onSendMessage={handleSendMessage} 
+            <ChatContainer
+              messages={messages}
+              onSendMessage={handleSendMessage}
               currentTranscript={interimTranscript}
               onRecord={handleRecord}
               isRecording={isListening}
