@@ -1,0 +1,13 @@
+/* components/common/Header.css */
+.header {
+    display: flex;
+    height: 131px;
+    align-items: center;
+    background-color: var(--secondary-color);
+    padding: 0 22px;
+}
+
+.header-logo {
+    height: 95px;
+    width: auto;
+}
