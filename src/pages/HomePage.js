@@ -9,7 +9,7 @@ import LeftBookImage from '../images/Book_3D_left.png';
 const HomePage = () => {
   return (
     <div className="home-container">
-      <Header />
+      {/* <Header /> */}
       <main className="home-main">
         <div className="books-section">
           {/* 오른쪽 책 */}

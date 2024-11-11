@@ -74,7 +74,7 @@ function App() {
 
   return (
     <div className="main-container">
-      <Header />
+      {/* <Header /> */}
       
       <main className="main-content">
       <StepTracker />
