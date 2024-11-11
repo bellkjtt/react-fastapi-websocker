@@ -1,4 +1,128 @@
 
+/* 새로운 main-container를 flex 컨테이너로 설정하여 OBS 화면과 채팅 컨테이너를 나란히 배치 */
+/* .main-container {
+    display: flex;
+    align-items: flex-start;
+    width: 85vw;
+    height: 90vh;
+} */
+
+ /* OBS 아바타 화면 스타일 */
+ /* .obs-screen {
+    width: 30%;
+    height: 85vh;
+    position: relative;
+    border-radius: 15px;
+    overflow: hidden; 
+    margin-left: auto;
+} */
+
+/* video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+} */
+
+#container {
+    width: 100%;
+    height: 80vh;
+    overflow: hidden;
+    max-width: 600px;
+    z-index: 1;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(5px);
+    margin-left: 100px;
+}
+
+#header {
+    display: flex;
+    height: 131px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+#recordButton {
+    font-size: 1.2em;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    background-color: #8B4513;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+#recordButton:hover {
+    background-color: #5D3311;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#chatContainer {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 300px;
+    overflow-y: auto;
+    border: 1px solid rgba(224, 224, 224, 0.5);
+    border-radius: 8px;
+    padding: 10px;
+    background-color: rgba(249, 249, 249, 0.7);
+    margin-bottom: 10px;
+}
+
+.chatMessage {
+    margin-bottom: 20px;
+    padding: 8px 12px;
+    border-radius: 18px;
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+.userMessage {
+    background-color: rgba(227, 242, 253, 0.8);
+    color: #000;
+    align-self: flex-end;
+}
+
+.botMessage {
+    background-color: rgba(240, 240, 240, 0.8);
+    color: #000;
+    align-self: flex-start;
+}
+
+
+
+#textInput {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1.2em;
+}
+
+#sendButton {
+    padding: 7px 20px;
+    background-color: #8B4513;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 1.2em;
+}
+
+#sendButton:hover {
+    background-color: #5D3311;
+}
+
 
 /* Component.css */
 :root {
@@ -10,6 +134,99 @@
     --bot-message-bg: #f0f0f0;
   }
   
+  .header {
+    display: flex;
+    height: 131px;
+    align-items: center;
+    background-color: var(--secondary-color);
+    padding: 0 22px;
+  }
+  
+  .header-logo {
+    height: 95px;
+    width: auto;
+  }
+  
+  .chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  
+  .chat-header-logo {
+    height: 100px;
+    width: auto;
+  }
+  
+  .chat-button {
+    border-radius: 9999px;
+    background-color: var(--primary-color);
+    padding: 8px 24px;
+    color: white;
+    transition: background-color 0.3s;
+  }
+  
+  .chat-button:hover {
+    background-color: var(--hover-color);
+  }
+  
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    background-color: var(--chat-bg-color);
+    padding: 16px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    
+    word-wrap: break-word;
+  }
+  
+  .chat-message {
+    max-width: 100%;
+    padding: 12px;
+    margin-bottom: 10px; /* 위 아래 간격을 더 넓게 */
+    border-radius: 18px;
+  }
+  
+  .user-message {
+    align-self: flex-end;
+    background-color: var(--user-message-bg);
+    color: #000;
+    margin-right: 10px; /* 오른쪽으로 살짝 여백 추가 */
+  }
+  
+  .bot-message {
+    align-self: flex-start;
+    background-color: var(--bot-message-bg);
+  }
+  
+  .input-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .input-field {
+    flex: 1;
+    border: 1px solid var(--primary-color);
+    background-color: white;
+    padding: 8px;
+    border-radius: 4px;
+  }
+  
+  .send-button {
+    border-radius: 4px;
+    background-color: var(--primary-color);
+    padding: 8px 16px;
+    color: white;
+  }
   
   .main-container {
     display: flex;
@@ -37,10 +254,32 @@
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
     margin-left: 5%;
   }
-
+  
+  .camera-section {
+    position: relative;
+    width: 50%;
+    border-right: 1px solid rgba(139, 69, 19, 0.1);
+    background-color: #f8f5f1;
+  }
+  
+  .camera-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .camera-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background-color: #f5f1ec;
+    color: red;
+    font-weight: bold;
+  }
   
   .chat-section {
-    width: 47%;
+    width: 50%;
     padding: 24px;
   }
   

@@ -1,59 +1,74 @@
-// ChatContainer.js
-import { useState, useEffect, useRef } from 'react';
-import smalllifelogo from '../images/liferary_logo.png';
-import './ChatContainer.css';
+import { useState, useEffect } from 'react';
+import useSpeechRecognition from './useSpeechRecognition';
+import ChatContainer from './ChatContainer';
 
-
-export default function ChatContainer({ messages, onSendMessage, currentTranscript, onRecord, isRecording }) {
-  const [inputText, setInputText] = useState("");
-  const chatContainerRef = useRef(null);
-
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+const Chat = () => {
+  const [messages, setMessages] = useState([]);
+  const { 
+    isListening, 
+    interimTranscript, 
+    finalTranscript, 
+    startListening, 
+    stopListening 
+  } = useSpeechRecognition({
+    onMessageReceived: (response) => {
+      // 봇 메시지 추가
+      setMessages(prev => [...prev, {
+        sender: 'bot',
+        text: response.message // 백엔드 응답 형식에 맞게 조정
+      }]);
     }
-  }, [messages, currentTranscript]);
+  });
 
-  const handleSend = () => {
-    if (inputText.trim()) {
-      onSendMessage(inputText);
-      setInputText("");
+  // 음성 인식 텍스트가 finalTranscript로 변경될 때 유저 메시지 추가
+  useEffect(() => {
+    if (finalTranscript) {
+      setMessages(prev => [...prev, {
+        sender: 'user',
+        text: finalTranscript
+      }]);
+    }
+  }, [finalTranscript]);
+
+  const handleSendMessage = (text, image) => {
+    // 텍스트 입력 처리
+    if (text) {
+      setMessages(prev => [...prev, {
+        sender: 'user',
+        text: text
+      }]);
+      
+      // 백엔드로 전송
+      fetch('http://127.0.0.1:8000/process_speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        setMessages(prev => [...prev, {
+          sender: 'bot',
+          text: data.message // 백엔드 응답 형식에 맞게 조정
+        }]);
+      })
+      .catch(error => console.error('Error:', error));
     }
   };
 
   return (
-    <div className="chat-container">
-      <div className="chat-header">
-        <img src={smalllifelogo} alt="Liferary Logo2" className="chat-header-logo" />
-        <button onClick={onRecord} className="chat-button">
-          {isRecording ? "말하기 중지" : "말하기 시작"}
-        </button>
-      </div>
-      <div className="chat-messages" ref={chatContainerRef}>
-        {messages.map((msg, index) => (
-          <div key={index} className={`chat-message ${msg.sender === "user" ? "user-message" : "bot-message"}`}>
-            {msg.text}
-          </div>
-        ))}
-        {currentTranscript && <div className="chat-message user-message">{currentTranscript}</div>}
-      </div>
-      <div className="input-container">
-        <input
-          type="text"
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyPress={(e) => {
-            if (e.key === "Enter") {
-              handleSend();
-            }
-          }}
-          placeholder="메시지를 입력하세요..."
-          className="input-field"
-        />
-        <button onClick={handleSend} className="send-button">
-          전송
-        </button>
-      </div>
+    <div>
+      <ChatContainer
+        messages={messages}
+        onSendMessage={handleSendMessage}
+        currentTranscript={interimTranscript}
+      />
+      <button onClick={isListening ? stopListening : startListening}>
+        {isListening ? '음성 인식 중지' : '음성 인식 시작'}
+      </button>
     </div>
   );
-}
+};
+
+export default Chat;
