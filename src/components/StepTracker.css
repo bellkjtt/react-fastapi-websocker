@@ -1,13 +1,17 @@
+/* Google Fonts 추가 */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
 .main-container {
     position: relative;
     display: flex;
+    font-family: 'Roboto', sans-serif; /* Roboto 폰트 적용 */
 }
 
 /* step-tracker를 main-container의 왼쪽에 고정 */
 .main-container .step-tracker {
     position: absolute;
     left: 8%;
-    top: 201px;
+    top: 75px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -17,7 +21,7 @@
 .main-container .step {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 20px;
     position: relative;
 }
 
@@ -49,18 +53,28 @@
     color: #fff;
 }
 
+/* 완료된 원의 라벨 색상 */
+.main-container .completed + .label {
+    color: #8B4513; /* 원의 색상과 일치 */
+}
+
 /* 활성화된 원의 애니메이션 효과 */
 .main-container .active::before {
     content: "";
     position: absolute;
-    width: 110%; /* 크기를 원보다 살짝 크게 설정 */
+    width: 110%;
     height: 110%;
     border-radius: 50%;
     background: linear-gradient(135deg, #FFA500, #FFD700);
     animation: rotate 2s linear infinite;
-    z-index: -1; /* 원 뒤쪽에 배치 */
-    top: -5%; /* 원의 중앙에 정렬되도록 위치 조정 */
+    z-index: -1;
+    top: -5%;
     left: -5%;
+}
+
+/* 활성화된 원의 라벨 색상 */
+.main-container .active + .label {
+    color: #FFA500; /* 활성화된 원의 색상과 일치 */
 }
 
 @keyframes rotate {
@@ -77,7 +91,7 @@
     transform: translateX(-50%);
     width: 3px;
     height: 35px;
-    background-color: inherit; /* 부모 색상 적용 */
+    background-color: inherit;
     z-index: 0;
 }
 
@@ -87,5 +101,5 @@
 
 .main-container .label {
     font-size: 1em;
-    color: #333;
+    color: rgba(170, 162, 149, 1);
 }
